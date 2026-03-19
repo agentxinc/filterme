@@ -1,0 +1,130 @@
+"use client";
+
+import { useState } from "react";
+import { GeneratedStory } from "@/types";
+
+interface StoryPreviewProps {
+  story: GeneratedStory;
+  onImprove: (feedback: string) => void;
+  onDownloadPdf: () => void;
+  isImproving: boolean;
+}
+
+export default function StoryPreview({
+  story,
+  onImprove,
+  onDownloadPdf,
+  isImproving,
+}: StoryPreviewProps) {
+  const [feedback, setFeedback] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  function handleSubmitFeedback(e: React.FormEvent) {
+    e.preventDefault();
+    if (!feedback.trim()) return;
+    onImprove(feedback);
+    setFeedback("");
+    setShowFeedback(false);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Story header */}
+      <div className="text-center py-8">
+        <h2 className="text-3xl font-bold text-gray-800">{story.title}</h2>
+        <p className="text-lg text-gray-500 mt-2 italic">{story.subtitle}</p>
+      </div>
+
+      {/* Story pages */}
+      {story.pages.map((page) => (
+        <div
+          key={page.pageNumber}
+          className="slambook-page rounded-xl p-8 max-w-2xl mx-auto animate-fade-in-up"
+        >
+          <div className="pl-10">
+            <p className="text-xs font-medium text-indigo-500 mb-2">
+              Chapter {page.pageNumber}
+            </p>
+            <h3 className="text-xl font-bold text-gray-800 mb-1">
+              {page.title}
+            </h3>
+            <p className="text-sm text-gray-400 mb-4">
+              {new Date(page.date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+
+            {page.imageUrl && (
+              <div className="mb-4">
+                <img
+                  src={page.imageUrl}
+                  alt={page.title}
+                  className="w-full max-h-64 object-cover rounded-xl shadow-md"
+                />
+              </div>
+            )}
+
+            <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+              {page.narrative}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Actions */}
+      <div className="flex flex-col items-center gap-4 pt-4">
+        <div className="flex gap-3 flex-wrap justify-center">
+          <button onClick={onDownloadPdf} className="btn-primary">
+            Download as PDF
+          </button>
+          <button
+            onClick={() => setShowFeedback(!showFeedback)}
+            className="btn-secondary"
+          >
+            Suggest Improvements
+          </button>
+        </div>
+
+        {/* Coming Soon: Video */}
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 text-center max-w-md">
+          <span className="inline-block bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full mb-2">
+            COMING SOON
+          </span>
+          <p className="text-sm text-purple-700">
+            Create a video of your life journey! Animated storybook with
+            narration and music.
+          </p>
+        </div>
+
+        {/* Feedback form */}
+        {showFeedback && (
+          <form
+            onSubmit={handleSubmitFeedback}
+            className="w-full max-w-lg bg-white rounded-xl p-5 card-shadow"
+          >
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What would you like to change?
+            </label>
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="e.g., Make the tone more humorous, add more detail to chapter 2, change the title..."
+              rows={3}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition resize-none mb-3"
+              required
+            />
+            <button
+              type="submit"
+              className="btn-primary w-full text-center"
+              disabled={isImproving}
+            >
+              {isImproving ? "Regenerating..." : "Regenerate with Changes"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
