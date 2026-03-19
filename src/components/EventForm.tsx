@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import exifr from "exifr";
 import { LifeEvent } from "@/types";
 
 interface EventFormProps {
@@ -12,15 +13,30 @@ export default function EventForm({ onAddEvent }: EventFormProps) {
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [dateSource, setDateSource] = useState<"manual" | "exif">("manual");
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Read image preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Try to extract EXIF date
+    try {
+      const exifData = await exifr.parse(file, ["DateTimeOriginal", "CreateDate", "ModifyDate"]);
+      const exifDate = exifData?.DateTimeOriginal || exifData?.CreateDate || exifData?.ModifyDate;
+      if (exifDate && exifDate instanceof Date) {
+        const formatted = exifDate.toISOString().split("T")[0];
+        setDate(formatted);
+        setDateSource("exif");
+      }
+    } catch {
+      // No EXIF data available — that's fine
     }
   }
 
@@ -41,6 +57,7 @@ export default function EventForm({ onAddEvent }: EventFormProps) {
     setDate("");
     setDescription("");
     setImagePreview(null);
+    setDateSource("manual");
   }
 
   return (
@@ -74,10 +91,19 @@ export default function EventForm({ onAddEvent }: EventFormProps) {
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+            onChange={(e) => { setDate(e.target.value); setDateSource("manual"); }}
+            className={`w-full px-4 py-2.5 rounded-xl border outline-none transition ${
+              dateSource === "exif"
+                ? "border-green-300 bg-green-50 focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                : "border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            }`}
             required
           />
+          {dateSource === "exif" && (
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <span>&#x1f4f7;</span> Date auto-filled from photo metadata
+            </p>
+          )}
         </div>
 
         <div>
