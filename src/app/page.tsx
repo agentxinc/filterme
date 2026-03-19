@@ -103,16 +103,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      {/* Quote Banner */}
-      {quote && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 py-3 px-4 text-center">
-          <p className="text-gray-700 italic text-sm max-w-2xl mx-auto">
-            &ldquo;{quote.text}&rdquo;
-          </p>
-          <p className="text-xs text-gray-400 mt-1">&mdash; {quote.author}</p>
-        </div>
-      )}
-
       {/* Header */}
       <header className="gradient-bg text-white py-6 px-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -123,6 +113,14 @@ export default function Home() {
             <p className="text-indigo-100 text-sm mt-0.5">
               Your personalized life storybook
             </p>
+            {quote && (
+              <div className="mt-3">
+                <p className="text-yellow-300 italic font-medium text-base">
+                  &ldquo;{quote.text}&rdquo;
+                </p>
+                <p className="text-yellow-200/70 text-xs mt-1">&mdash; {quote.author}</p>
+              </div>
+            )}
           </div>
           {story && (
             <div className="flex gap-2">
@@ -177,7 +175,7 @@ export default function Home() {
                 className={`text-lg px-10 py-4 rounded-full font-semibold transition-all ${
                   events.length > 0
                     ? "btn-primary"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-indigo-100 text-indigo-400 border-2 border-dashed border-indigo-300 cursor-not-allowed"
                 }`}
                 disabled={isGenerating || events.length === 0}
               >
